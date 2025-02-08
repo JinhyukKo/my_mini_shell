@@ -1,5 +1,5 @@
 # Mini Shell
->[!info]
+> [!info]
 > simply runs inner shells using child processes
 > * (1) fork a child process using fork()
 > * (2) the child process will invoke execvp()
