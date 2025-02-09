@@ -4,7 +4,8 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <fcntl.h>
-
+#include "handle_redirection.h"
+#include "handle_pipe.h"
 #define MAX_LINE 80 /* The maximum length of a command */
 
 void input_command(char* args[], char* input);
@@ -82,24 +83,12 @@ int main(void) {
 
         // Handle input redirection
         if (input_redirect) {
-            int fd_input = open(input_file, O_RDONLY);
-            if (fd_input < 0) {
-                perror("Input file open error");
-                continue;
-            }
-            dup2(fd_input, STDIN_FILENO);
-            close(fd_input);
+            handle_input_redirection(input_file);
         }
 
         // Handle output redirection
         if (output_redirect) {
-            int fd_output = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (fd_output < 0) {
-                perror("Output file open error");
-                continue;
-            }
-            dup2(fd_output, STDOUT_FILENO);
-            close(fd_output);
+            handle_output_redirection(output_file);
         }
 
         // Fork and execute the command
@@ -108,39 +97,13 @@ int main(void) {
             perror("fork");
             exit(1);
         } else if (pid == 0) {
-            // Handle pipe redirection
             if (pipe_redirect) {
-                pipe(fd);
-                pid = fork();
-                if (pid < 0) {
-                    perror("fork");
-                } else if (pid == 0) {
-                    // First child process: execute the first command and write to the pipe
-                    close(fd[0]);  // Close reading end of the pipe
-                    dup2(fd[1], STDOUT_FILENO);  // Redirect stdout to pipe
-                    close(fd[1]);
-                    if (execvp(args[0], args) == -1) {
-                        perror("execvp failed");
-                    }
-                } else {
-                    // Parent process: execute the second command and read from the pipe
-                    wait(NULL);
-                    close(fd[1]);  // Close writing end of the pipe
-                    dup2(fd[0], STDIN_FILENO);  // Redirect stdin to pipe
-                    close(fd[0]);
-                    dup2(saved_stdout, STDOUT_FILENO);  // Restore stdout
-                    char *args2[] = {following_command, NULL};
-                    if (execvp(following_command, args2) == -1) {
-                        perror("execvp failed");
-                    }
-                }
+                handle_pipe(args,following_command,saved_stdout);
             }
-            // No pipe redirection: execute the command
             else if (execvp(args[0], args) == -1) {
                 perror("execvp failed");
             }
         } else {
-            // Parent process: wait for the child process to finish
             if (background) {
                 printf("Background process started with PID %d\n", pid);
             } else {
@@ -170,4 +133,3 @@ void input_command(char *args[], char* input) {
     // Remove newline character from the input
     input[strcspn(input, "\n")] = 0;
 }
-
