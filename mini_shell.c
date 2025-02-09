@@ -4,8 +4,8 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <fcntl.h>
-#include "handle_redirection.h"
-#include "handle_pipe.h"
+#include "header/handle_redirection.h"
+#include "header/handle_pipe.h"
 #define MAX_LINE 80 /* The maximum length of a command */
 
 void input_command(char* args[], char* input);
@@ -133,3 +133,4 @@ void input_command(char *args[], char* input) {
     // Remove newline character from the input
     input[strcspn(input, "\n")] = 0;
 }
+
