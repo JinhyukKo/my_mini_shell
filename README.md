@@ -10,4 +10,9 @@
 
 Simply it is a shell! 
 
+```bash
+> gcc simple-shell.c src/handle_redirection.c src/handle_pipe.c -o a.out
+> ./a.out
+```
+
 <img width="546" alt="Screenshot 2025-02-08 at 23 16 18" src="https://github.com/user-attachments/assets/ae51d6f2-6d4d-4534-8067-e3e05804ed72" />
